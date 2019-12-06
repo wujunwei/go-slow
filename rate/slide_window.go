@@ -5,18 +5,20 @@ import (
 	"time"
 )
 
+type Unit float64
+
 const (
-	Nanosecond  time.Duration = 1
-	Microsecond               = 1000 * Nanosecond
-	Millisecond               = 1000 * Microsecond
-	Second                    = 1000 * Millisecond
-	Minute                    = 60 * Second
-	Hour                      = 60 * Minute
+	Nanosecond  Unit = 1
+	Microsecond      = 1000 * Nanosecond
+	Millisecond      = 1000 * Microsecond
+	Second           = 1000 * Millisecond
+	Minute           = 60 * Second
+	Hour             = 60 * Minute
 )
 
 type WindowLimiter struct {
 	sync.Mutex
-	timeUnit time.Duration
+	timeUnit Unit
 	floor    int64
 }
 
