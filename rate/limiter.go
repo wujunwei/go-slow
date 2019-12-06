@@ -3,10 +3,10 @@ package rate
 import "time"
 
 type Limiter interface {
-	tryAcquire() Token
-	tryAcquireSome(num int) Token
-	acquire() Token
-	acquireSome(num int) Token
-	timeoutAcquire(timeout time.Duration) Token
-	timeoutAcquireSome(num int, timeout time.Duration) Token
+	tryAcquire() bool
+	tryAcquireSome(num int) bool
+	acquire() time.Duration
+	acquireSome(num int) time.Duration
+	timeoutAcquire(timeout time.Duration) bool
+	timeoutAcquireSome(num int, timeout time.Duration) bool
 }

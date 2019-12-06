@@ -22,21 +22,21 @@ type WindowLimiter struct {
 	floor    int64
 }
 
-func (limiter *WindowLimiter) acquire() (token Token) {
+func (limiter *WindowLimiter) acquire() (waitedTime time.Duration) {
 	return
 }
-func (limiter *WindowLimiter) tryAcquire() (token Token) {
+func (limiter *WindowLimiter) tryAcquire() (ok bool) {
 	return
 }
-func (limiter *WindowLimiter) tryAcquireSome(num int) (token Token) {
+func (limiter *WindowLimiter) tryAcquireSome(num int) (ok bool) {
 	return
 }
-func (limiter *WindowLimiter) acquireSome(num int) (token Token) {
+func (limiter *WindowLimiter) acquireSome(num int) (waitedTime time.Duration) {
 	return
 }
-func (limiter *WindowLimiter) timeoutAcquire(timeout time.Duration) (token Token) {
+func (limiter *WindowLimiter) timeoutAcquire(timeout time.Duration) (ok bool) {
 	return
 }
-func (limiter *WindowLimiter) timeoutAcquireSome(num int, timeout time.Duration) (token Token) {
+func (limiter *WindowLimiter) timeoutAcquireSome(num int, timeout time.Duration) (ok bool) {
 	return
 }
