@@ -5,21 +5,21 @@ import "time"
 type BucketLimiter struct {
 }
 
-func (limiter *BucketLimiter) acquire() (waitedTime time.Duration) {
+func (limiter *BucketLimiter) Acquire() (waitedTime time.Duration) {
 	return
 }
-func (limiter *BucketLimiter) tryAcquire() (ok bool) {
+func (limiter *BucketLimiter) TryAcquire() (ok bool) {
 	return
 }
-func (limiter *BucketLimiter) tryAcquireSome(num int) (ok bool) {
+func (limiter *BucketLimiter) TryAcquireSome(num int) (ok bool) {
 	return
 }
-func (limiter *BucketLimiter) acquireSome(num int) (waitedTime time.Duration) {
+func (limiter *BucketLimiter) AcquireSome(num int) (waitedTime time.Duration) {
 	return
 }
-func (limiter *BucketLimiter) timeoutAcquire(timeout time.Duration) (ok bool) {
+func (limiter *BucketLimiter) TimeoutAcquire(timeout time.Duration) (ok bool) {
 	return
 }
-func (limiter *BucketLimiter) timeoutAcquireSome(num int, timeout time.Duration) (ok bool) {
+func (limiter *BucketLimiter) TimeoutAcquireSome(num int, timeout time.Duration) (ok bool) {
 	return
 }

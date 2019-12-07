@@ -5,38 +5,39 @@ import (
 	"time"
 )
 
-type Unit float64
-
-const (
-	Nanosecond  Unit = 1
-	Microsecond      = 1000 * Nanosecond
-	Millisecond      = 1000 * Microsecond
-	Second           = 1000 * Millisecond
-	Minute           = 60 * Second
-	Hour             = 60 * Minute
-)
-
 type WindowLimiter struct {
-	sync.Mutex
-	timeUnit Unit
-	floor    int64
+	stopWatch        Watch
+	lock             sync.Mutex
+	maxPermits       int
+	availablePermits int
 }
 
-func (limiter *WindowLimiter) acquire() (waitedTime time.Duration) {
+func (limiter *WindowLimiter) Acquire() (waitedTime time.Duration) {
+
 	return
 }
-func (limiter *WindowLimiter) tryAcquire() (ok bool) {
+func (limiter *WindowLimiter) TryAcquire() (ok bool) {
+	ok = limiter.TryAcquireSome(1)
 	return
 }
-func (limiter *WindowLimiter) tryAcquireSome(num int) (ok bool) {
+func (limiter *WindowLimiter) TryAcquireSome(num int) (ok bool) {
+	limiter.lock.Lock()
+	defer limiter.lock.Unlock()
+	if num <= limiter.availablePermits {
+		limiter.maxPermits -= num
+		ok = true
+	}
 	return
 }
-func (limiter *WindowLimiter) acquireSome(num int) (waitedTime time.Duration) {
+func (limiter *WindowLimiter) AcquireSome(num int) (waitedTime time.Duration) {
 	return
 }
-func (limiter *WindowLimiter) timeoutAcquire(timeout time.Duration) (ok bool) {
+func (limiter *WindowLimiter) TimeoutAcquire(timeout time.Duration) (ok bool) {
 	return
 }
-func (limiter *WindowLimiter) timeoutAcquireSome(num int, timeout time.Duration) (ok bool) {
+func (limiter *WindowLimiter) TimeoutAcquireSome(num int, timeout time.Duration) (ok bool) {
 	return
+}
+func (limiter *WindowLimiter) setRate(perSecond int) {
+	limiter.maxPermits = perSecond
 }
