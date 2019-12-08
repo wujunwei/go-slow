@@ -1,4 +1,4 @@
-package rate
+package prop
 
 import "time"
 
@@ -8,15 +8,16 @@ type Watch struct {
 	elapsedNanos int64
 }
 
-func (w *Watch) start() {
+func (w *Watch) Start() {
 	if w.running {
 		return
 	}
 	w.running = true
 	w.startTick = time.Now().UnixNano()
+	w.elapsedNanos = 0
 }
 
-func (w *Watch) stop() {
+func (w *Watch) Stop() {
 	if !w.running {
 		return
 	}
@@ -24,7 +25,7 @@ func (w *Watch) stop() {
 	w.elapsedNanos += time.Now().UnixNano() - w.startTick
 }
 
-func (w *Watch) reset() {
+func (w *Watch) Reset() {
 	if !w.running {
 		return
 	}
@@ -32,14 +33,15 @@ func (w *Watch) reset() {
 	w.elapsedNanos += time.Now().UnixNano() - w.startTick
 	w.startTick = 0
 }
-func (w Watch) elapse() int64 {
+func (w Watch) Elapse() (elapsed time.Duration) {
 	if w.running {
-		return w.elapsedNanos + time.Now().UnixNano() - w.startTick
+		elapsed = time.Duration(w.elapsedNanos + time.Now().UnixNano() - w.startTick)
 	} else {
-		return w.elapsedNanos
+		elapsed = time.Duration(w.elapsedNanos)
 	}
+	return
 }
 
-func (w Watch) isRunning() bool {
+func (w Watch) Running() bool {
 	return w.running
 }
