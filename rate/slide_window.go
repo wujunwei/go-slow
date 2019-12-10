@@ -10,8 +10,9 @@ type windowLimiter struct {
 	stopWatch      prop.Watch
 	lock           sync.Mutex
 	timeUnit       time.Duration
+	maxLoopLevel   int
 	maxPermits     int
-	nextMaxPermits int
+	nextMaxPermits []int
 	storedPermits  int
 }
 
@@ -37,7 +38,7 @@ func (limiter *windowLimiter) TryAcquireSome(num int) bool {
 }
 func (limiter *windowLimiter) AcquireSome(num int) time.Duration {
 	start := time.Now()
-	limiter.TimeoutAcquireSome(num, limiter.timeUnit)
+	limiter.TimeoutAcquireSome(num, time.Duration(limiter.maxLoopLevel)*limiter.timeUnit)
 	return time.Since(start)
 }
 
@@ -50,33 +51,25 @@ func (limiter *windowLimiter) TimeoutAcquireSome(num int, timeout time.Duration)
 		limiter.lock.Unlock()
 		return true
 	}
-	duration := limiter.timeToProduce()
-	if duration > timeout {
+	// in order to lock before sleep ,we give num permits of the next-time-unit permits
+	duration, ok := limiter.TimeoutPreProduce(num, timeout)
+	limiter.lock.Unlock()
+	if !ok {
 		return false
 	}
-	num = num - limiter.storedPermits
-	limiter.storedPermits = 0
-	// in order to lock before sleep ,we give num permits of the next-time-unit permits
-	limiter.preProduce(num)
-	limiter.lock.Unlock()
 	time.Sleep(duration)
 	return true
 }
 
-func (limiter windowLimiter) timeToProduce() time.Duration {
+func (limiter windowLimiter) timeToNextProduce() time.Duration {
 	return limiter.timeUnit - limiter.stopWatch.Elapse()
-}
-
-func (limiter *windowLimiter) preProduce(num int) {
-	if limiter.nextMaxPermits < num {
-		return
-	}
-	limiter.nextMaxPermits -= num
 }
 
 func (limiter *windowLimiter) SetRate(perUnit int, timeUnit time.Duration) {
 	limiter.maxPermits = perUnit
-	limiter.nextMaxPermits = perUnit
+	for i := 0; i < limiter.maxLoopLevel; i++ {
+		limiter.nextMaxPermits = append(limiter.nextMaxPermits, perUnit)
+	}
 	limiter.storedPermits = perUnit
 	limiter.timeUnit = timeUnit
 }
@@ -88,18 +81,53 @@ func (limiter *windowLimiter) lazyProduce() {
 }
 
 func (limiter *windowLimiter) produce() {
-	limiter.storedPermits = limiter.nextMaxPermits
-	limiter.nextMaxPermits = limiter.maxPermits
+	limiter.storedPermits = limiter.nextMaxPermits[0]
+	limiter.nextMaxPermits = append(limiter.nextMaxPermits[1:], limiter.maxPermits)
 	limiter.stopWatch.Reset()
 	limiter.stopWatch.Start()
 }
 
-func Create(perUnit int, timeUnit time.Duration) *windowLimiter {
+func (limiter *windowLimiter) TimeoutPreProduce(num int, timeout time.Duration) (time.Duration, bool) {
+	waitTime := limiter.timeToNextProduce()
+	if waitTime > timeout {
+		return 0, false
+	}
+	timeout -= waitTime
+	j := 0
+	gains := limiter.storedPermits
+	for i, permits := range limiter.nextMaxPermits {
+		waitTime += limiter.timeUnit
+		gains += permits
+		if num <= gains {
+			if timeout < waitTime {
+				return 0, false
+			}
+			j = i
+			break
+		}
+	} //judge if borrow time from future or not
+
+	if num > gains {
+		return 0, false
+	}
+	limiter.storedPermits = 0
+	for i := 0; i <= j; i++ {
+		if num >= limiter.nextMaxPermits[i] {
+			limiter.nextMaxPermits[i] = 0
+		} else {
+			limiter.nextMaxPermits[i] -= num
+		}
+	}
+	return waitTime, true
+}
+
+func Create(perUnit int, maxLevel int, timeUnit time.Duration) *windowLimiter {
 	watch := prop.Watch{}
 	watch.Start()
 	l := &windowLimiter{
-		stopWatch: watch,
-		lock:      sync.Mutex{},
+		stopWatch:    watch,
+		maxLoopLevel: maxLevel,
+		lock:         sync.Mutex{},
 	}
 	l.SetRate(perUnit, timeUnit)
 	return l

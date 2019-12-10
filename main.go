@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	l := rate.Create(5, 1*time.Second)
+	l := rate.Create(5, 1, 1*time.Second)
 	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
-		func() {
+		go func() {
 			fmt.Println(l.AcquireSome(2))
 			wg.Done()
 		}()
