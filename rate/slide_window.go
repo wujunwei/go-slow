@@ -54,6 +54,8 @@ func (limiter *windowLimiter) TimeoutAcquireSome(num int, timeout time.Duration)
 	if duration > timeout {
 		return false
 	}
+	num = num - limiter.storedPermits
+	limiter.storedPermits = 0
 	// in order to lock before sleep ,we give num permits of the next-time-unit permits
 	limiter.preProduce(num)
 	limiter.lock.Unlock()
