@@ -17,6 +17,7 @@ type windowLimiter struct {
 }
 
 func (limiter *windowLimiter) Acquire() time.Duration {
+
 	return limiter.AcquireSome(1)
 }
 func (limiter *windowLimiter) TryAcquire() bool {
@@ -42,7 +43,6 @@ func (limiter *windowLimiter) AcquireSome(num int) time.Duration {
 	return time.Since(start)
 }
 
-//todo fix condition > num and foreach the condition util enough permits are produced
 func (limiter *windowLimiter) TimeoutAcquireSome(num int, timeout time.Duration) bool {
 	limiter.lock.Lock()
 	limiter.lazyProduce()
@@ -55,6 +55,7 @@ func (limiter *windowLimiter) TimeoutAcquireSome(num int, timeout time.Duration)
 	duration, ok := limiter.TimeoutPreProduce(num, timeout)
 	limiter.lock.Unlock()
 	if !ok {
+		//todo deal error
 		return false
 	}
 	time.Sleep(duration)
@@ -92,11 +93,12 @@ func (limiter *windowLimiter) TimeoutPreProduce(num int, timeout time.Duration) 
 	if waitTime > timeout {
 		return 0, false
 	}
-	timeout -= waitTime
 	j := 0
 	gains := limiter.storedPermits
 	for i, permits := range limiter.nextMaxPermits {
-		waitTime += limiter.timeUnit
+		if i != 0 {
+			waitTime += limiter.timeUnit
+		}
 		gains += permits
 		if num <= gains {
 			if timeout < waitTime {
@@ -105,7 +107,7 @@ func (limiter *windowLimiter) TimeoutPreProduce(num int, timeout time.Duration) 
 			j = i
 			break
 		}
-	} //judge if borrow time from future or not
+	} //judge if can we borrow time from future or not
 
 	if num > gains {
 		return 0, false

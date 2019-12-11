@@ -10,10 +10,10 @@ import (
 func main() {
 	l := rate.Create(5, 1, 1*time.Second)
 	wg := sync.WaitGroup{}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 15; i++ {
 		wg.Add(1)
 		go func() {
-			fmt.Println(l.AcquireSome(2))
+			fmt.Println(l.Acquire())
 			wg.Done()
 		}()
 
