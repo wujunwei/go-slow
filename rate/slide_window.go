@@ -17,7 +17,6 @@ type windowLimiter struct {
 }
 
 func (limiter *windowLimiter) Acquire() time.Duration {
-
 	return limiter.AcquireSome(1)
 }
 func (limiter *windowLimiter) TryAcquire() bool {
@@ -55,7 +54,7 @@ func (limiter *windowLimiter) TimeoutAcquireSome(num int, timeout time.Duration)
 	duration, ok := limiter.TimeoutPreProduce(num, timeout)
 	limiter.lock.Unlock()
 	if !ok {
-		//todo deal error
+
 		return false
 	}
 	time.Sleep(duration)
