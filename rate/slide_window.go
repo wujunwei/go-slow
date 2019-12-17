@@ -1,6 +1,7 @@
 package rate
 
 import (
+	"errors"
 	"github.com/wujunwei/go-slow/prop"
 	"sync"
 	"time"
@@ -16,15 +17,13 @@ type windowLimiter struct {
 	storedPermits  int
 }
 
-func (limiter *windowLimiter) Acquire() time.Duration {
-
+func (limiter *windowLimiter) Acquire() (time.Duration, error) {
 	return limiter.AcquireSome(1)
 }
 func (limiter *windowLimiter) TryAcquire() bool {
 	return limiter.TryAcquireSome(1)
-
 }
-func (limiter *windowLimiter) TimeoutAcquire(timeout time.Duration) bool {
+func (limiter *windowLimiter) TimeoutAcquire(timeout time.Duration) error {
 	return limiter.TimeoutAcquireSome(1, timeout)
 }
 func (limiter *windowLimiter) TryAcquireSome(num int) bool {
@@ -37,29 +36,31 @@ func (limiter *windowLimiter) TryAcquireSome(num int) bool {
 	}
 	return false
 }
-func (limiter *windowLimiter) AcquireSome(num int) time.Duration {
+func (limiter *windowLimiter) AcquireSome(num int) (duration time.Duration, err error) {
 	start := time.Now()
-	limiter.TimeoutAcquireSome(num, time.Duration(limiter.maxLoopLevel)*limiter.timeUnit)
-	return time.Since(start)
+	err = limiter.TimeoutAcquireSome(num, time.Duration(limiter.maxLoopLevel)*limiter.timeUnit)
+	if err != nil {
+		return 0, err
+	}
+	return time.Since(start), err
 }
 
-func (limiter *windowLimiter) TimeoutAcquireSome(num int, timeout time.Duration) bool {
+func (limiter *windowLimiter) TimeoutAcquireSome(num int, timeout time.Duration) (err error) {
 	limiter.lock.Lock()
 	limiter.lazyProduce()
 	if num <= limiter.storedPermits {
 		limiter.storedPermits -= num
 		limiter.lock.Unlock()
-		return true
+		return nil
 	}
 	// in order to lock before sleep ,we give num permits of the next-time-unit permits
-	duration, ok := limiter.TimeoutPreProduce(num, timeout)
+	duration, ok := limiter.timeoutPreProduce(num, timeout)
 	limiter.lock.Unlock()
 	if !ok {
-		//todo deal error
-		return false
+		return errors.New("up to the max level, or request timeout")
 	}
 	time.Sleep(duration)
-	return true
+	return nil
 }
 
 func (limiter windowLimiter) timeToNextProduce() time.Duration {
@@ -88,7 +89,7 @@ func (limiter *windowLimiter) produce() {
 	limiter.stopWatch.Start()
 }
 
-func (limiter *windowLimiter) TimeoutPreProduce(num int, timeout time.Duration) (time.Duration, bool) {
+func (limiter *windowLimiter) timeoutPreProduce(num int, timeout time.Duration) (time.Duration, bool) {
 	waitTime := limiter.timeToNextProduce()
 	if waitTime > timeout {
 		return 0, false

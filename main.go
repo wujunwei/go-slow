@@ -3,20 +3,27 @@ package main
 import (
 	"fmt"
 	"github.com/wujunwei/go-slow/rate"
-	"sync"
+	"net/http"
+	"strings"
 	"time"
 )
 
-func main() {
-	l := rate.Create(5, 1, 1*time.Second)
-	wg := sync.WaitGroup{}
-	for i := 0; i < 15; i++ {
-		wg.Add(1)
-		go func() {
-			fmt.Println(l.Acquire())
-			wg.Done()
-		}()
+var l = rate.Create(5, 1, 5*time.Second)
 
+type myHandle struct {
+}
+
+func (m myHandle) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	d, err := l.Acquire()
+	result := strings.Builder{}
+	result.WriteString(d.String())
+	if err != nil {
+		result.WriteString(err.Error())
 	}
-	wg.Wait()
+	_, _ = writer.Write([]byte("I have been waiting :" + result.String()))
+}
+func main() {
+	http.Handle("/acquire", myHandle{})
+	err := http.ListenAndServe("localhost:8080", nil)
+	fmt.Println(err)
 }
