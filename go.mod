@@ -1,3 +1,3 @@
-module github.com/wujunwei/go-slow
+module goslow
 
 go 1.12

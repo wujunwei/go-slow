@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/wujunwei/go-slow/rate"
+	"goslow/rate"
 	"net/http"
 	"strings"
 	"time"
@@ -24,6 +24,6 @@ func (m myHandle) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 }
 func main() {
 	http.Handle("/acquire", myHandle{})
-	err := http.ListenAndServe("localhost:8080", nil)
+	err := http.ListenAndServe("localhost:80", nil)
 	fmt.Println(err)
 }

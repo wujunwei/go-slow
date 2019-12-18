@@ -2,7 +2,7 @@ package rate
 
 import (
 	"errors"
-	"github.com/wujunwei/go-slow/prop"
+	"goslow/prop"
 	"sync"
 	"time"
 )
