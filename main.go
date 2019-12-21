@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var l = rate.Create(5, 1, 5*time.Second)
+var l = rate.Create(5, 0, 5*time.Second)
 
 type myHandle struct {
 }
@@ -34,4 +34,5 @@ func main() {
 		}()
 
 	}
+	time.Sleep(7 * time.Second)
 }

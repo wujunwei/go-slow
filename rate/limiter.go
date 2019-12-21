@@ -1,7 +1,6 @@
 package rate
 
 import (
-	"goslow/prop"
 	"sync"
 	"time"
 )
@@ -18,19 +17,20 @@ type Limiter interface {
 
 //Create
 func Create(perUnit, maxLevel int, timeUnit time.Duration) (l Limiter) {
-	watch := prop.Watch{}
+	watch := Watch{}
 	watch.Start()
 	if maxLevel == 0 {
+		l = &smoothWindow{
+			stopWatch: watch,
+			lock:      sync.Mutex{},
+		}
+	} else {
 		l = &windowLimiter{
 			stopWatch:    watch,
 			maxLoopLevel: maxLevel,
 			lock:         sync.Mutex{},
 		}
-	} else {
-		l = &smoothWindow{
-			stopWatch: watch,
-			lock:      sync.Mutex{},
-		}
+
 	}
 
 	l.SetRate(perUnit, timeUnit)

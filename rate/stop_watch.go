@@ -1,4 +1,4 @@
-package prop
+package rate
 
 import "time"
 

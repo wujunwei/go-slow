@@ -2,13 +2,12 @@ package rate
 
 import (
 	"errors"
-	"goslow/prop"
 	"sync"
 	"time"
 )
 
 type windowLimiter struct {
-	stopWatch      prop.Watch
+	stopWatch      Watch
 	lock           sync.Mutex
 	timeUnit       time.Duration
 	maxLoopLevel   int

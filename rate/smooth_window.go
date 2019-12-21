@@ -2,13 +2,12 @@ package rate
 
 import (
 	"errors"
-	"goslow/prop"
 	"sync"
 	"time"
 )
 
 type smoothWindow struct {
-	stopWatch     prop.Watch
+	stopWatch     Watch
 	lock          sync.Mutex
 	produceRate   time.Duration
 	maxPermits    int
