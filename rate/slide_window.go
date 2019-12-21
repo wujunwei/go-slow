@@ -123,15 +123,3 @@ func (limiter *windowLimiter) timeoutPreProduce(num int, timeout time.Duration) 
 	}
 	return waitTime, true
 }
-
-func Create(perUnit int, maxLevel int, timeUnit time.Duration) *windowLimiter {
-	watch := prop.Watch{}
-	watch.Start()
-	l := &windowLimiter{
-		stopWatch:    watch,
-		maxLoopLevel: maxLevel,
-		lock:         sync.Mutex{},
-	}
-	l.SetRate(perUnit, timeUnit)
-	return l
-}
