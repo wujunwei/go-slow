@@ -37,7 +37,9 @@ func (limiter *smoothWindow) TryAcquireSome(num int) bool {
 //AcquireSome this function will never return error
 func (limiter *smoothWindow) AcquireSome(num int) (duration time.Duration, err error) {
 	start := time.Now()
-	err = limiter.TimeoutAcquireSome(num, time.Duration(abs(limiter.storedPermits-num))*limiter.produceRate)
+	balance := limiter.storedPermits - num
+	balance = (balance >> 31) ^ balance - (balance >> 31) //calculate the abs of balance
+	err = limiter.TimeoutAcquireSome(num, time.Duration(balance)*limiter.produceRate)
 	duration = time.Since(start)
 	return
 }
@@ -78,8 +80,4 @@ func (limiter *smoothWindow) produce(num int) {
 	}
 	limiter.stopWatch.Reset()
 	limiter.stopWatch.Start()
-}
-
-func abs(x int) int {
-	return (x >> 31) ^ x - (x >> 31)
 }
