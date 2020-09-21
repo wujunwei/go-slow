@@ -9,7 +9,7 @@ pipeline {
 
          stage('Run') {
             steps {
-                ./goslow
+                goslow
             }
          }
     }
